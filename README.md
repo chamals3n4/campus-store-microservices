@@ -16,7 +16,8 @@ The system is split into independently deployable services, each owning its own 
 
 Order Service and Product Service communicate synchronously over REST using OpenFeign. When an order is placed, Order Service calls Product Service directly, waits for the response, and only saves the order if stock is available.
 
-Async communication (Order Service publishing an event that Notification Service consumes via Kafka) is planned but not yet implemented.
+Order Service also publishes an event to Kafka after saving an order. Notification Service consumes that event independently and asynchronously, so it doesn't block the order request, and it still receives events created while it was offline.
+
 
 ## Tech stack
 
