@@ -11,7 +11,7 @@ The system is split into independently deployable services, each owning its own 
 - **Auth Service** (port 8081): user registration and login, password hashing with BCrypt, JWT issuing
 - **Product Service** (port 8082): CRUD for products and stock
 - **Order Service** (port 8083): creates orders, calls Product Service synchronously to check and reduce stock
-- **Notification Service** (port 8084): planned, will consume order events asynchronously via Kafka
+- **Notification Service** (port 8084): consumes order events asynchronously via Kafka and logs a simulated confirmation
 - **API Gateway** (port 8080): single entry point, routes requests to the correct service by path
 
 Order Service and Product Service communicate synchronously over REST using OpenFeign. When an order is placed, Order Service calls Product Service directly, waits for the response, and only saves the order if stock is available.
