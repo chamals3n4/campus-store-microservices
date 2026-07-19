@@ -3,8 +3,10 @@ package com.campusstore.order_service.service;
 import com.campusstore.order_service.client.ProductClient;
 import com.campusstore.order_service.dto.OrderRequest;
 import com.campusstore.order_service.dto.ProductResponse;
+import com.campusstore.order_service.event.OrderCreatedEvent;
 import com.campusstore.order_service.model.Order;
 import com.campusstore.order_service.repository.OrderRepository;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,10 +16,14 @@ import java.util.List;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final ProductClient productClient;
+    private final KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate;
 
-    public OrderService(OrderRepository orderRepository,ProductClient productClient){
+    private static final String TOPIC = "order-events";
+
+    public OrderService(OrderRepository orderRepository,ProductClient productClient, KafkaTemplate<String, OrderCreatedEvent> kafkaTemplate){
         this.orderRepository = orderRepository;
         this.productClient = productClient;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     public Order createOrder(OrderRequest request){
@@ -37,7 +43,13 @@ public class OrderService {
 
         Order savedOrder = orderRepository.save(order);
 
-        // TODO : publish ordercreated event to kafka
+        OrderCreatedEvent event = new OrderCreatedEvent(
+                savedOrder.getId(),
+                savedOrder.getProductId(),
+                savedOrder.getQuantity(),
+                savedOrder.getCreatedAt().toString()
+        );
+        kafkaTemplate.send(TOPIC, event);
 
         return savedOrder;
     }
